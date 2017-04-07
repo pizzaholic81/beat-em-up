@@ -1,0 +1,9 @@
+pip-selfcheck.json
+.Python
+
+__pycache__/
+# Virtualenv subdirs:
+bin/
+include/
+lib/
+
