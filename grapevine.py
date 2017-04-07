@@ -431,6 +431,17 @@ class Villain(Character):
             cls.NAME_FMT = cls.__NAME__ + ' {}'
         return cls.NAME_FMT
 
+class JackScrapper(Villain):
+    NAME_FMT = 'Jack Scrapper {}'
+    ATTRS = {
+        'image_prefix': 'jack_scrapper',
+        'level': 1,
+        'speed': 4,
+        'hp': 2000,
+        'stamina': 15,
+        'fear': 85,
+    }
+
 class ShitClown(Villain):
 
     NAME_FMT = 'Shit Clown {}'
@@ -445,10 +456,12 @@ class ShitClown(Villain):
 
 if __name__ == '__main__':
     #import pdb; pdb.set_trace()
-    sc1 = ShitClown()
-    sc2 = ShitClown()
-    print(sc1)
-    print(sc2)
+    v1 = ShitClown()
+    v2 = JackScrapper()
+    v3 = JackScrapper()
+    print(v1)
+    print(v2)
+    print(v3)
     exit(0)
 
 def main():
