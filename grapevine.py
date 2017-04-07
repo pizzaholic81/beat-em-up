@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #**************************************************************************
 #   IMPORTS
 #**************************************************************************
@@ -12,39 +14,13 @@ from random import randint
 
 assert sys.version_info[0] == 3, "Code assumes Python 3"
 
-# This mess is because I can't get pygame to install on my mac. Sorry.
-
-NO_PYGAME = 'NO_PYGAME' in os.environ
-
-if not NO_PYGAME:
+try:
     import pygame
+
     from pygame.locals import *
-else:
-    class Dummy:
-        def __call__(self, *args, **kwargs):
-            return self
-        def __eq__(self, other): return self is other
-        def __hash__(self): return hash(None)
-        def __init__(self, *args, **kwargs): pass
-        def __len__(self): return 0
-        def __next__(self): raise StopIteration
-        def __repr__(self): return 'Dummy()'
 
-        __exit__ = __init__
-
-        __abs__ = __add__ = __and__ = __call__ = __delattr__ = \
-        __delitem__ = __div__ = __enter__ = __floordiv__ = __getattr__ = \
-        __getitem__ = __invert__ = __iter__ = __lshift__ = __mod__ = \
-        __mul__ = __neg__ = __or__ = __pos__ = __pow__ = __radd__ = \
-        __rand__ = __rdiv__ = __reversed__ =  __rfloordiv__ = __rlshift__ = \
-        __rmod__ = __rmul__ = __ror__ = __rpow__ = __rrshift__ = __rshift__ = \
-        __rsub__ = __rtruediv__ = __rxor__ = __setattr__ = __setitem__ = \
-        __sub__ = __truediv__ = __xor__ = \
-        __call__
-
-        next = __next__  # Python2
-
-    pygame = Dummy()
+except ImportError:
+    pass
 
 #**************************************************************************
 #   COLORS
@@ -84,19 +60,10 @@ PLAYABLE_SCREEN_HEIGHT = SCREEN_HEIGHT - 100
     SPRITE GROUPS
 **************************************************************************
 """
-heroes_list = pygame.sprite.Group()
-enemy_list = pygame.sprite.Group()
-near_hero_list = pygame.sprite.Group()
-all_sprites_list = pygame.sprite.Group()
-
 DEFAULT_SURFACE_SIZE = (30,20)
 
-if NO_PYGAME:
-    parent=object
-else:
-    parent=pygame.sprite.Sprite
 
-class Character(parent):
+class Character(pygame.sprite.Sprite):
     """
     Character is the root of the game class tree. A character can be a
     hero or villain. A character is an object that displays and updates
@@ -109,8 +76,7 @@ class Character(parent):
         Any attributes that are passed in by name will be added to the
         object.
         """
-        if not NO_PYGAME:
-            super().__init__()
+        super().__init__()
 
         # Import any attributes specified in the kwargs
         for attr,val in kwargs.items():
@@ -145,6 +111,9 @@ class Character(parent):
             self.images.update(images)
         else:
             self.images = images
+
+    def update(self, *args):
+        raise NotImplementedError
 
 """
 **************************************************************************
@@ -184,18 +153,18 @@ class Hero(Character):
         ticks = 60
 
     def held(self, enemy):
-        for villan in near_hero_list:
-            pass
+        #for villan in near_hero_list:
+        pass
 
     def update(self, pressed_keys):
 
         #if self.held_cooldown:
-        for villan in near_hero_list:
-            if villan.grabbing_cooldown == True:
-                self.held_cooldown == True
-                self.rect.x = (villan.rect.x + 30)
-                self.rect.y = villan.rect.y
-                break
+        #for villan in near_hero_list:
+        #    if villan.grabbing_cooldown == True:
+        #        self.held_cooldown == True
+        #        self.rect.x = (villan.rect.x + 30)
+        #        self.rect.y = villan.rect.y
+        #        break
 
         if self.held_cooldown == True:
             self.held_timer -= 1
@@ -341,32 +310,19 @@ class Enemy(Character):
         self.grabbing_timer = grabbing_timer
         self.blocking_timer = blocking_timer
 
-        blocking_cooldown = False
-        jumping_cooldown = False
-        jumping_coutndown = 0
-        attacking_cooldown = False
-        attacking_timer = 0
-        held_cooldown = False
-        held_timer = 0
-        knockdown_cooldown = False
-        knockdown_timer = 0
-        stun_cooldown = False
-        stun_timer = 0
-        grabbing_cooldown = False
-        grabbing_timer = 0
-        blocking_timer = 0
-
     def grab(self, heroBoonrit):
-        if self in near_hero_list:
-            self.grabbing_cooldown = True
-        else:
-            self.grabbing_cooldown = False
+        #if self in near_hero_list:
+        #    self.grabbing_cooldown = True
+        #else:
+        #    self.grabbing_cooldown = False
+        pass
 
     def punch(self, heroBoonrit):
-        if self in near_hero_list:
-            self.punching_cooldown = True
-        else:
-            return False
+        #if self in near_hero_list:
+            #self.punching_cooldown = True
+        #else:
+            #return False
+        pass
 
     def update(self):
         if self.grabbing_cooldown:
@@ -418,6 +374,13 @@ class Villain(Character):
         return '{}({})'.format(cls, self.__dict__)
 
     def get_id(self):
+        """
+        Keep an integer counter in the class object of each subclass.
+        Look for the `_counter` attribute, create it to 0 if not found.
+        Each time get_id is called, it increments the _counter and
+        returns that value. Thus, each subclass gets a stream of ids
+        like 1, 2, 3, ...
+        """
         cls = type(self)
         if not hasattr(cls, '_counter'):
             cls._counter = 0
@@ -426,6 +389,12 @@ class Villain(Character):
         return cls._counter
 
     def get_name_fmt(self):
+        """
+        Return the name format string for a subclass. If there is no
+        NAME_FMT attribute on the subclass, just use the subclass's name
+        as the basis for the format. This will be formatted with a number
+        from get_id to produce an instance's name, like 'Shit Clown 1'.
+        """
         cls = type(self)
         if not hasattr(cls, 'NAME_FMT'):
             cls.NAME_FMT = cls.__NAME__ + ' {}'
@@ -454,15 +423,6 @@ class ShitClown(Villain):
         'fear': 90,
     }
 
-if __name__ == '__main__':
-    #import pdb; pdb.set_trace()
-    v1 = ShitClown()
-    v2 = JackScrapper()
-    v3 = JackScrapper()
-    print(v1)
-    print(v2)
-    print(v3)
-    exit(0)
 
 def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -474,6 +434,11 @@ def main():
     pygame.init()
     clock = pygame.time.Clock()
     Score = 0
+
+    heroes_list = pygame.sprite.Group()
+    enemy_list = pygame.sprite.Group()
+    near_hero_list = pygame.sprite.Group()
+    all_sprites_list = pygame.sprite.Group()
 
     font_hero_name = pygame.font.SysFont("monospace", 15)
 
@@ -657,6 +622,12 @@ def main():
     """
 
 
+if __name__ == '__main__':
+    if not pygame.image.get_extended():
+        print("Pygame not built with extended image format support. Sorry.")
+        exit(1)
+
+    main()
 
 #******************************************************************************************************
 #   NOTES
